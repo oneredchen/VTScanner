@@ -3,7 +3,7 @@ import re
 import asyncio
 
 inputFilename = "input.txt"
-apiKey = "e135f7110c3ed4eb0a5686e02378ccb1ca916210fa57bc51e1dd10c8ac81481c"
+apiKey = "INSERT YOUR OWN API KEY"
 ipRegex = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"
 urlRegex = re.compile(
     r'^(?:http|ftp)s?://'
