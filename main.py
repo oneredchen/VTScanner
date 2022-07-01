@@ -3,7 +3,7 @@ import re
 import asyncio
 
 inputFilename = "input.txt"
-apiKey = "USE YOUR OWN API KEY FROM VIRUST TOTAL"
+apiKey = "e135f7110c3ed4eb0a5686e02378ccb1ca916210fa57bc51e1dd10c8ac81481c"
 ipRegex = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"
 urlRegex = re.compile(
     r'^(?:http|ftp)s?://'
@@ -11,6 +11,23 @@ urlRegex = re.compile(
     r'localhost|'
     r'(?::\d+)?'
     r'(?:/?|[/?]\S+)$', re.IGNORECASE)  # Extracted from Django URL validator
+
+
+async def ipScan(client, queries):
+    tasks = []
+    for query in queries:
+        # Adding the async ops into the task queue
+        tasks.append(client.get_object_async(f"/ip_addresses/{query}"))
+    # Execute the tasks in the task queue cocurrently
+    ipResponses = await asyncio.gather(*tasks)
+    for resp in ipResponses:
+        ipScanned = resp.id
+        vtAnalysis = resp.last_analysis_stats
+        print("-"*100)
+        print(f"URL Scanned: {ipScanned}")
+        print(
+            f'Results:\nHarmless: {vtAnalysis["harmless"]} | Malicious: {vtAnalysis["malicious"]} | Suspicious: {vtAnalysis["suspicious"]} | Timeout: {vtAnalysis["timeout"]} | Undetected: {vtAnalysis["undetected"]}')
+        print("-"*100)
 
 
 async def urlScan(client, queries):
@@ -22,7 +39,13 @@ async def urlScan(client, queries):
     # Execute the tasks in the task queue cocurrently
     urlResponses = await asyncio.gather(*tasks)
     for resp in urlResponses:
-        print(resp.last_analysis_stats)
+        urlScanned = resp.url
+        vtAnalysis = resp.last_analysis_stats
+        print("-"*100)
+        print(f"URL Scanned: {urlScanned}")
+        print(
+            f'Results:\nHarmless: {vtAnalysis["harmless"]} | Malicious: {vtAnalysis["malicious"]} | Suspicious: {vtAnalysis["suspicious"]} | Timeout: {vtAnalysis["timeout"]} | Undetected: {vtAnalysis["undetected"]}')
+        print("-"*100)
 
 
 async def fileScan(client, queries):
@@ -33,7 +56,17 @@ async def fileScan(client, queries):
     # Execute the tasks in the task queue cocurrently
     fileResponses = await asyncio.gather(*tasks)
     for resp in fileResponses:
-        print(resp.last_analysis_stats)
+        print("-"*100)
+        if resp.md5 in queries:
+            print(f"MD5 Hash Scanned: {resp.md5}")
+        elif resp.sha1 in queries:
+            print(f"SHA1 Hash Scanned: {resp.sha1}")
+        else:
+            print(f"SHA256 Hash Scanned: {resp.sha256}")
+        vtAnalysis = resp.last_analysis_stats
+        print(
+            f'Results:\nHarmless: {vtAnalysis["harmless"]} | Malicious: {vtAnalysis["malicious"]} | Suspicious: {vtAnalysis["suspicious"]} | Timeout: {vtAnalysis["timeout"]} | Undetected: {vtAnalysis["undetected"]}')
+        print("-"*100)
 
 
 async def main():
@@ -60,7 +93,7 @@ async def main():
     print(
         f"IPv4 Query Queue: {ipQueries}\nURL Query Queue: {urlQueries}\nFile Query Queue: {fileQueries}")
     client = vt.Client(apiKey)
-    await asyncio.gather(urlScan(client, urlQueries),
+    await asyncio.gather(ipScan(client, ipQueries), urlScan(client, urlQueries),
                          fileScan(client, fileQueries))
     await client.close_async()
 
