@@ -1,7 +1,7 @@
-youtube.com
-apple.com
-google.com
-microsoft.com
-facebook.com
-darktrace.com
+http://www.youtube.com
+http://www.apple.com
+http://www.google.com
+http://www.microsoft.com
+http://www.facebook.com
 54.149.3.103
+f511ab5caf5aaa548fb901a01105f843c88c33e83231ac8350dc31797bfe7f66

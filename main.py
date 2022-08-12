@@ -1,76 +1,26 @@
 import vt
+import os
 import re
 import asyncio
-
-inputFilename = "input.txt"
-apiKey = "INSERT YOUR OWN API KEY"
-ipRegex = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"
-urlRegex = re.compile(
-    r'^(?:http|ftp)s?://'
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|'
-    r'localhost|'
-    r'(?::\d+)?'
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)  # Extracted from Django URL validator
-
-
-async def ipScan(client, queries):
-    tasks = []
-    for query in queries:
-        # Adding the async ops into the task queue
-        tasks.append(client.get_object_async(f"/ip_addresses/{query}"))
-    # Execute the tasks in the task queue cocurrently
-    ipResponses = await asyncio.gather(*tasks)
-    for resp in ipResponses:
-        ipScanned = resp.id
-        vtAnalysis = resp.last_analysis_stats
-        print("-"*100)
-        print(f"URL Scanned: {ipScanned}")
-        print(
-            f'Results:\nHarmless: {vtAnalysis["harmless"]} | Malicious: {vtAnalysis["malicious"]} | Suspicious: {vtAnalysis["suspicious"]} | Timeout: {vtAnalysis["timeout"]} | Undetected: {vtAnalysis["undetected"]}')
-        print("-"*100)
-
-
-async def urlScan(client, queries):
-    tasks = []
-    for query in queries:
-        url_id = vt.url_id(query)
-        # Adding the async ops into the task queue
-        tasks.append(client.get_object_async(f"/urls/{url_id}"))
-    # Execute the tasks in the task queue cocurrently
-    urlResponses = await asyncio.gather(*tasks)
-    for resp in urlResponses:
-        urlScanned = resp.url
-        vtAnalysis = resp.last_analysis_stats
-        print("-"*100)
-        print(f"URL Scanned: {urlScanned}")
-        print(
-            f'Results:\nHarmless: {vtAnalysis["harmless"]} | Malicious: {vtAnalysis["malicious"]} | Suspicious: {vtAnalysis["suspicious"]} | Timeout: {vtAnalysis["timeout"]} | Undetected: {vtAnalysis["undetected"]}')
-        print("-"*100)
-
-
-async def fileScan(client, queries):
-    tasks = []
-    for query in queries:
-        # Adding the async ops into the task queue
-        tasks.append(client.get_object_async(f"/files/{query}"))
-    # Execute the tasks in the task queue cocurrently
-    fileResponses = await asyncio.gather(*tasks)
-    for resp in fileResponses:
-        print("-"*100)
-        if resp.md5 in queries:
-            print(f"MD5 Hash Scanned: {resp.md5}")
-        elif resp.sha1 in queries:
-            print(f"SHA1 Hash Scanned: {resp.sha1}")
-        else:
-            print(f"SHA256 Hash Scanned: {resp.sha256}")
-        vtAnalysis = resp.last_analysis_stats
-        print(
-            f'Results:\nHarmless: {vtAnalysis["harmless"]} | Malicious: {vtAnalysis["malicious"]} | Suspicious: {vtAnalysis["suspicious"]} | Timeout: {vtAnalysis["timeout"]} | Undetected: {vtAnalysis["undetected"]}')
-        print("-"*100)
+from util import *
 
 
 async def main():
     # Reading input file containing the queries to be made
+    # Ensuring all required files are present & setup
+    cwd = os.getcwd()
+    inputFilename = "input.txt"
+    if not os.path.exists(cwd + "/" + inputFilename):
+        print("Please create an Input.txt file containing the URLs / File Hashes / IP address to be scanned")
+        exit()
+    apiKey = "e135f7110c3ed4eb0a5686e02378ccb1ca916210fa57bc51e1dd10c8ac81481c"
+    ipRegex = "^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"
+    urlRegex = re.compile(
+        "((http|https)://)(www.)?" +
+        "[a-zA-Z0-9@:%._\\+~#?&//=]" +
+        "{2,256}\\.[a-z]" +
+        "{2,6}\\b([-a-zA-Z0-9@:%" +
+        "._\\+~#?&//=]*)")
     try:
         with open(inputFilename, 'r', encoding="utf-8") as file:
             queries = file.read().split()
@@ -79,8 +29,7 @@ async def main():
     # 3 separate tasks queue: IP, URL, Files (SHA256, SHA1 etc)
     ipQueries = []
     urlQueries = []
-    fileQueries = [
-        "f511ab5caf5aaa548fb901a01105f843c88c33e83231ac8350dc31797bfe7f66"]
+    fileQueries = []
 
     for query in queries:
         if re.search(ipRegex, query):

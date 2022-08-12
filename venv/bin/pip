@@ -1,4 +1,4 @@
-#!/Users/chenny/Desktop/VTScanner/venv/bin/python3
+#!/Users/chenny/Desktop/Programming/VTScanner/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
