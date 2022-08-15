@@ -7,3 +7,5 @@ The scanner will open the file & proceed to scan the information provided in the
 To improve the speed of the program, the code has been designed to run asychronously via the usage of AsyncIO + AIOHttp packages.
 
 Feel free to copy the code for your own usage or let me know what can be improved. Cheers!
+
+Note: The URLs should include "https://www." OR "http://www." in order for the regex to successfully separate the file hashes from the URLs.
